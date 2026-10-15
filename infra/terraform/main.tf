@@ -197,15 +197,28 @@ resource "aws_iam_role_policy_attachment" "lambda_task_attach" {
 }
 
 # 5. Función AWS Lambda Serverless para la API FastAPI
+data "archive_file" "lambda_dummy" {
+  type        = "zip"
+  output_path = "${path.module}/lambda_payload.zip"
+
+  source {
+    content  = "# Enterprise AI Operations Assistant Lambda Handler"
+    filename = "handler.py"
+  }
+}
+
 resource "aws_lambda_function" "api" {
-  filename         = "${path.module}/../../lambda_function.zip"
+  filename         = fileexists("${path.module}/../../lambda_function.zip") ? "${path.module}/../../lambda_function.zip" : data.archive_file.lambda_dummy.output_path
   function_name    = "${var.app_name}-api-${var.environment}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "app.main.handler"
   runtime          = "python3.12"
   timeout          = 60
   memory_size      = 512
-  source_code_hash = filebase64sha256("${path.module}/../../lambda_function.zip")
+
+  lifecycle {
+    ignore_changes = [filename, source_code_hash]
+  }
 
   environment {
     variables = {
