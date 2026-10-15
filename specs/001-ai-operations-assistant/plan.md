@@ -18,8 +18,9 @@ Construir un Agente RAG empresarial y API REST con FastAPI en Python para la ges
 **Primary Dependencies**: FastAPI, Pydantic v2, Uvicorn, ChromaDB, LangChain Core (o cliente nativo LLM), PyPDF / Python-docx, pytest, aiosqlite  
 **Storage**: ChromaDB (almacenamiento vectorial en `./data/vectorstore`), SQLite (`./data/history.db` para historial/auditoría), JSON mock (`./data/requests_db.json` para solicitudes operativas)  
 **Testing**: pytest (suite de integración y `tests/test_evaluation.py` con 5 casos de calidad)  
-**Target Platform**: Ejecución local multiplataforma (Windows/Linux/macOS) y despliegue contenerizado en AWS ECS Fargate  
-**Project Type**: Web Service (API REST con FastAPI) + CLI scripts + IaC (Terraform)  
+**Target Platform**: Ejecución local multiplataforma (Windows/Linux/macOS) y despliegue serverless en AWS (HTTP API Gateway + AWS Lambda + Bedrock + S3 + DynamoDB)  
+**Live Endpoint**: `https://rvcbgebxx7.execute-api.us-east-1.amazonaws.com`  
+**Project Type**: Web Service (API REST con FastAPI + Mangum) + CLI scripts + IaC (Terraform)  
 **Performance Goals**: P95 < 5 segundos en consultas estándar RAG  
 **Constraints**: Secretos aislados en `.env`, 0 fugas de stack traces en errores, abstención obligatoria ante falta de datos fundamentados, mitigación de prompt injection  
 **Scale/Scope**: Módulo backend atómico y autónomo, sin frontend innecesario (Principio I de la constitución)

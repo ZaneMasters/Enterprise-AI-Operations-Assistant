@@ -135,8 +135,8 @@
 
 **Purpose**: Cumplir el Principio VI y declarar la infraestructura reproducible en AWS.
 
-- [X] T029 [P] Create modular Terraform definitions for AWS in `infra/terraform/`: `main.tf` (ECS Fargate, S3, DynamoDB, IAM), `variables.tf`, and `outputs.tf`
-- [X] T030 Validate Terraform syntax and plan locally using `terraform fmt` and `terraform validate` in `infra/terraform/`
+- [X] T029 [P] Create modular Terraform definitions for AWS in `infra/terraform/`: `main.tf` (Lambda Serverless, HTTP API Gateway, S3, DynamoDB, IAM), `variables.tf`, and `outputs.tf`
+- [X] T030 Validate Terraform syntax, plan and deploy successfully to AWS (`terraform apply`) exposing the public HTTPS endpoint
 
 ---
 

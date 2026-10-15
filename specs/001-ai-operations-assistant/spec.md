@@ -4,9 +4,9 @@
 
 **Created**: 2026-10-15
 
-**Status**: Draft
+**Status**: Completed (100% Implemented & Deployed to AWS)
 
-**Input**: User description: "Construir un agente RAG empresarial que permita consultar documentación interna, responder preguntas fundamentadas en fuentes, ejecutar herramientas controladas y mantener trazabilidad de las interacciones. La solución se desarrollará sobre AWS utilizando Python, FastAPI y Terraform como herramienta de Infrastructure as Code (IaC)."
+**Input**: User description: "Construir un agente RAG empresarial que permita consultar documentación interna, responder preguntas fundamentadas en fuentes, ejecutar herramientas controladas y mantener trazabilidad de las interacciones. La solución se desarrollará sobre AWS utilizando Python, FastAPI, Bedrock y Terraform como herramienta de Infrastructure as Code (IaC)."
 
 ## Clarifications
 
