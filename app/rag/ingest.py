@@ -156,8 +156,68 @@ class DocumentIngestionService:
             )
             logger.info(f"Documento '{filename}' ({doc_id}) indexado exitosamente en ChromaDB con {len(chunks)} fragmentos.")
         else:
-            logger.info(f"Modo Cloud/Serverless: Documento '{filename}' ({doc_id}) procesado exitosamente ({len(chunks)} fragmentos).")
+            logger.info(f"Modo Cloud/Serverless: Documento '{filename}' ({doc_id}) procesado ({len(chunks)} fragmentos).")
+
+        # En entorno Cloud/Serverless con Bedrock y S3, vectorizar con Titan y persistir en S3
+        self._index_in_s3_titan(filename, chunks, doc_id)
+
         return doc_id, len(chunks)
+
+    def _index_in_s3_titan(self, filename: str, chunks: List[str], doc_id: str) -> None:
+        """Genera embeddings Titan y los almacena dinámicamente en S3 para Cloud/Lambda."""
+        s3_bucket = self.settings.S3_BUCKET_NAME or os.environ.get("S3_BUCKET_NAME")
+        if not s3_bucket:
+            return
+
+        try:
+            import json
+            import boto3
+            region = self.settings.BEDROCK_REGION or os.environ.get("AWS_REGION", "us-east-1")
+            bedrock = boto3.client("bedrock-runtime", region_name=region)
+            s3 = boto3.client("s3", region_name=region)
+
+            new_items = []
+            for i, chunk in enumerate(chunks):
+                try:
+                    res = bedrock.invoke_model(
+                        modelId="amazon.titan-embed-text-v1",
+                        contentType="application/json",
+                        accept="application/json",
+                        body=json.dumps({"inputText": chunk})
+                    )
+                    emb = json.loads(res["body"].read().decode("utf-8"))["embedding"]
+                    new_items.append({
+                        "source": filename,
+                        "chunk_id": f"{filename}_chunk_{i}_{doc_id[:8]}",
+                        "text": chunk,
+                        "embedding": emb
+                    })
+                except Exception as e:
+                    logger.error(f"Error generando embedding Titan para chunk {i} de {filename}: {e}")
+
+            if not new_items:
+                return
+
+            key = "vectorstore/dynamic_chunks.json"
+            existing_chunks = []
+            try:
+                obj = s3.get_object(Bucket=s3_bucket, Key=key)
+                existing_chunks = json.loads(obj["Body"].read().decode("utf-8"))
+            except Exception:
+                pass
+
+            existing_chunks.extend(new_items)
+
+            s3.put_object(
+                Bucket=s3_bucket,
+                Key=key,
+                Body=json.dumps(existing_chunks, ensure_ascii=False).encode("utf-8"),
+                ContentType="application/json"
+            )
+            logger.info(f"Índice vectorial S3 actualizado con {len(new_items)} nuevos fragmentos Titan para '{filename}'.")
+        except Exception as e:
+            logger.error(f"Error al indexar fragmentos en S3 Titan: {e}")
+
 
 
 # Instancia singleton

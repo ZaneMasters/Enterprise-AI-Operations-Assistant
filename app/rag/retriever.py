@@ -87,8 +87,20 @@ class RAGRetrieverService:
                 nb = math.sqrt(sum(x * x for x in b))
                 return dot / (na * nb) if na and nb else 0.0
 
+            # Cargar fragmentos dinámicos desde S3 si existen
+            all_chunks = list(self.titan_chunks or [])
+            s3_bucket = self.settings.S3_BUCKET_NAME or os.environ.get("S3_BUCKET_NAME")
+            if s3_bucket:
+                try:
+                    s3 = boto3.client("s3", region_name=self.settings.BEDROCK_REGION or "us-east-1")
+                    obj = s3.get_object(Bucket=s3_bucket, Key="vectorstore/dynamic_chunks.json")
+                    dyn = json.loads(obj["Body"].read().decode("utf-8"))
+                    all_chunks.extend(dyn)
+                except Exception:
+                    pass
+
             scored = []
-            for item in self.titan_chunks:
+            for item in all_chunks:
                 score = _cosine(q_emb, item["embedding"])
                 dist = 1.0 - score
                 scored.append((dist, score, item))
