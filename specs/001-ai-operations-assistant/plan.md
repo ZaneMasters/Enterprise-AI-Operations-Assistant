@@ -16,8 +16,8 @@ Construir un Agente RAG empresarial y API REST con FastAPI en Python para la ges
 
 **Language/Version**: Python 3.11+  
 **Primary Dependencies**: FastAPI, Pydantic v2, Uvicorn, ChromaDB, LangChain Core (o cliente nativo LLM), PyPDF / Python-docx, pytest, aiosqlite  
-**Storage**: ChromaDB (almacenamiento vectorial en `./data/vectorstore`), SQLite (`./data/history.db` para historial/auditoría), JSON mock (`./data/requests_db.json` para solicitudes operativas)  
-**Testing**: pytest (suite de integración y `tests/test_evaluation.py` con 5 casos de calidad)  
+**Storage**: Dualidad local/cloud: ChromaDB (`./data/vectorstore` en local) y Amazon Bedrock Titan Embeddings dinámico en Amazon S3 (`s3://.../vectorstore/dynamic_chunks.json` en cloud); Persistencia de auditoría dual en Amazon DynamoDB (`enterprise-ai-assistant-history-production` en cloud) y SQLite (`./data/history.db` en local); JSON mock (`./data/requests_db.json` para solicitudes operativas)  
+**Testing**: pytest (suite de integración y `tests/test_evaluation.py` con 5 casos de calidad, 19 tests pasando al 100%)  
 **Target Platform**: Ejecución local multiplataforma (Windows/Linux/macOS) y despliegue serverless en AWS (HTTP API Gateway + AWS Lambda + Bedrock + S3 + DynamoDB)  
 **Live Endpoint**: `https://rvcbgebxx7.execute-api.us-east-1.amazonaws.com`  
 **Project Type**: Web Service (API REST con FastAPI + Mangum) + CLI scripts + IaC (Terraform)  

@@ -196,6 +196,29 @@
         "description": "Consulta el registro cronológico inmutable de interacciones y trazabilidad."
       },
       "response": []
+    },
+    {
+      "name": "9. RAG - Caso Documento KMS (Rotación y Período de Gracia)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"¿Cada cuántos días se deben rotar las claves KMS de datos financieros y cuál es el período de gracia?\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Consulta sobre el documento de políticas KMS (protocolo_rotacion_claves_kms.md)."
+      },
+      "response": []
     }
   ]
 }

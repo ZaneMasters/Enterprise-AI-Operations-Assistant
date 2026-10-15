@@ -121,3 +121,54 @@ class HealthResponse(BaseModel):
     timestamp: datetime
     vectorstore_status: str
 ```
+
+---
+
+## 3. Physical Storage Schemas
+
+### 3.1 Amazon DynamoDB (`enterprise-ai-assistant-history-production`)
+Tabla NoSQL serverless de pago por solicitud para auditoría inmutable en producción.
+
+- **Partition Key (HASH)**: `interaction_id` (`String` / UUID v4)
+- **Sort Key (RANGE)**: `timestamp` (`String` / ISO-8601 UTC)
+- **Atributos**:
+  - `session_id` (`String`): Identificador correlacional de sesión.
+  - `query` (`String`): Pregunta formulada.
+  - `answer` (`String`): Respuesta estructurada entregada.
+  - `sources` (`List[Map]`): Lista de fuentes documentales citadas.
+  - `tools_used` (`List[Map]`): Detalle de herramientas ejecutadas con sus entradas y salidas.
+  - `duration_ms` (`Number` / `Decimal`): Latencia total del procesamiento.
+  - `status` (`String`): `SUCCESS`, `ABSTAINED`, `ERROR`.
+
+### 3.2 Amazon S3 Storage Layout (`rag-docs-production-*`)
+Bucket de almacenamiento inmutable cifrado con SSE-AES256.
+
+```text
+rag-docs-production-<id>/
+├── documents/
+│   ├── politica_seguridad_accesos.md
+│   ├── procedimiento_actualizacion_db.md
+│   ├── manual_despliegues_canary.md
+│   └── protocolo_rotacion_claves_kms.md
+└── vectorstore/
+    └── dynamic_chunks.json  (Vectores de 1536 dimensiones generados con Bedrock Titan)
+```
+
+### 3.3 SQLite Local (`./data/history.db`)
+Almacenamiento relacional local para desarrollo offline sin credenciales cloud.
+
+```sql
+CREATE TABLE IF NOT EXISTS interaction_history (
+    interaction_id TEXT PRIMARY KEY,
+    session_id TEXT,
+    timestamp TEXT NOT NULL,
+    query TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    sources_json TEXT NOT NULL,
+    tools_used_json TEXT NOT NULL,
+    duration_ms REAL NOT NULL,
+    status TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_history_timestamp ON interaction_history (timestamp DESC);
+```
+

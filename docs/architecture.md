@@ -101,13 +101,49 @@ sequenceDiagram
 
 ---
 
-## 3. Justificación de Decisiones de Arquitectura
+## 3. Diagrama de Secuencia: Ingesta y Vectorización Dinámica (`POST /documents`)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as Operador / Administrador
+    participant GW as HTTP API Gateway
+    participant Lmb as AWS Lambda (FastAPI)
+    participant S3 as Amazon S3 Bucket
+    participant Titan as Bedrock Titan Embeddings
+    participant Chroma as ChromaDB Local
+
+    Admin->>GW: POST /documents (multipart/form-data: .pdf, .md, .txt)
+    GW->>Lmb: Evento HTTP Multipart
+    Lmb->>Lmb: 1. Validación de Formato & Extracción de Texto (PyPDF / UTF-8)
+    Lmb->>Lmb: 2. Chunking Recursivo (chunk_size=500, overlap=50)
+
+    alt Modo Cloud (AWS Lambda)
+        Lmb->>S3: 3. Respaldar Binario Original (s3://rag-docs-.../documents/<filename>)
+        loop Por cada Fragmento
+            Lmb->>Titan: 4. Generar Vector Embedding (amazon.titan-embed-text-v1)
+            Titan-->>Lmb: Vector 1536d
+        end
+        Lmb->>S3: 5. Persistir en Vector Store Dinámico (s3://.../vectorstore/dynamic_chunks.json)
+    else Modo Local (Offline)
+        Lmb->>Chroma: 3. Indexar Fragmentos en ChromaDB (./data/vectorstore)
+    end
+
+    Lmb-->>Admin: 201 Created DocumentIngestResponse {doc_id, chunks_created, message}
+```
+
+---
+
+## 4. Justificación de Decisiones de Arquitectura
 
 1. **AWS Lambda + HTTP API Gateway en lugar de ECS Fargate + ALB:**
-   - **Costo:** ECS con Application Load Balancer genera un costo fijo aproximado de **$25 - $40 USD/mes** solo por mantener el balanceador encendido sin tráfico. La arquitectura Lambda + HTTP API Gateway tiene **costo $0.00 USD en reposo** y entra en la capa gratuita de AWS.
+   - **Costo:** ECS con Application Load Balancer genera un costo fijo aproximado de **$25 - $40 USD/mes** solo por mantener el balanceador encendido sin tráfico. La arquitectura Lambda + HTTP API Gateway tiene **costo $0.00 USD en reposo** y entra holgadamente en el Free Tier de AWS.
    - **Escalabilidad:** Escala instantáneamente de 0 a miles de peticiones por segundo sin necesidad de configurar auto-scaling groups.
-2. **Amazon Titan Embeddings + Claude Haiku 4.5 en Bedrock:**
-   - Provee la menor latencia y el menor costo por token del ecosistema Anthropic/AWS en `us-east-1`.
-   - Soporta aislamiento estricto de prompts mediante tags XML contra inyecciones indirectas.
-3. **Dualidad Local / Nube:**
+2. **Persistencia Dual (Amazon DynamoDB en Cloud + SQLite en Local):**
+   - **En Producción (AWS Lambda):** La persistencia inmutable de auditoría se realiza en **Amazon DynamoDB** (`enterprise-ai-assistant-history-production`), garantizando durabilidad y consultas rápidas por Partition Key (`interaction_id`) y Sort Key (`timestamp`), superando la limitación del sistema de archivos efímero de Lambda.
+   - **En Desarrollo Local:** Emplea SQLite (`./data/history.db`) permitiendo ejecutar pruebas unitarias (`pytest`) sin necesidad de configurar credenciales de AWS.
+3. **Respaldo Documental en Amazon S3 y Embeddings Dinámicos con Titan:**
+   - Los documentos cargados por `POST /documents` se archivan con cifrado SSE-AES256 en Amazon S3 y se vectorizan al vuelo con `amazon.titan-embed-text-v1`, permitiendo que el asistente responda de inmediato sobre cualquier nuevo PDF o manual sin re-despliegues.
+4. **Dualidad Local / Nube:**
    - Los evaluadores pueden ejecutar la solución en local con `pytest` sin gastar credenciales de nube gracias a ChromaDB + SQLite + Mock Provider, o invocar la URL pública en vivo de AWS.
+

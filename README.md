@@ -180,10 +180,15 @@ No requieres instalar dependencias ni tener credenciales configuradas. Puedes pr
 | Método | Endpoint | Descripción |
 | :---: | :--- | :--- |
 | `GET` | `/health` | Chequeo de salud del servicio, versión y estado del vectorstore. |
-| `POST` | `/chat` | Endpoint principal de interacción con el Asistente RAG y herramientas. |
-| `GET` | `/history` | Consulta paginada y cronológica del historial de auditoría inmutable. |
-| `POST` | `/documents` | Ingesta y chunking dinámico de archivos `.md`, `.txt` o `.pdf`. |
-| `GET` | `/docs` | Interfaz gráfica interactiva Swagger UI / OpenAPI 3.0. |
+| `POST` | `/chat` | Endpoint principal de interacción con el Asistente RAG y herramientas. Registra auditoría en DynamoDB. |
+| `GET` | `/history` | Consulta paginada y cronológica del historial de auditoría inmutable (DynamoDB en Cloud, SQLite en Local). |
+| `POST` | `/documents` | Ingesta, chunking y vectorización dinámica con Bedrock Titan y respaldo en Amazon S3 (`.md`, `.txt`, `.pdf`). |
+| `GET` | `/docs` | Interfaz gráfica interactiva Swagger UI / OpenAPI 3.0 en vivo. |
+
+> [!TIP]
+> **Documento de Prueba Manual Incluido:**  
+> Puedes probar la ingesta dinámica y la respuesta del asistente subiendo el archivo [`data/sample_docs/protocolo_rotacion_claves_kms.md`](data/sample_docs/protocolo_rotacion_claves_kms.md) en `/documents` y luego consultando en `/chat`: *"¿Cada cuántos días se deben rotar las claves KMS de datos financieros y cuál es el período de gracia?"*.
+
 
 ---
 
