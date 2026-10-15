@@ -187,10 +187,26 @@ No requieres instalar dependencias ni tener credenciales configuradas. Puedes pr
 
 ---
 
-## 7. Mejoras Futuras y Consideraciones de Producción
+## 7. Sección de Mejoras Futuras
 
-1. **Mecanismo de Re-ranking:** Incorporar Cohere Rerank o Cross-Encoders ligeros en el pipeline de recuperación para ordenar fragmentos antes de enviarlos a Claude, reduciendo costos de tokens de entrada en documentos masivos.
-2. **Autenticación Empresarial:** Integrar Amazon Cognito o Azure AD (OAuth2 / OIDC con JWT) para control de acceso basado en roles (RBAC).
-3. **Caché Semántica:** Implementar Redis / Amazon ElastiCache para almacenar en caché preguntas frecuentes y reducir llamadas a Bedrock a 0 ms.
-4. **Almacenamiento Vectorial Serverless Dedicado:** Para millones de documentos, migrar a **Amazon OpenSearch Serverless** o **Pinecone / pgvector** en Amazon Aurora.
-5. **Observabilidad Avanzada con OpenTelemetry:** Instrumentar trazas distribuidas con AWS X-Ray para auditar la latencia detallada paso a paso (recuperación vectorial vs inferencia de Bedrock).
+1. **Mecanismo de Re-ranking:** Incorporar un modelo de re-clasificación semántica (como Cohere Rerank o Cross-Encoders ligeros) en el pipeline de recuperación antes de enviar los fragmentos a Claude, mejorando la precisión en catálogos documentales masivos y optimizando el consumo de tokens de entrada.
+2. **Caché Semántica (Semantic Caching):** Implementar Redis / Amazon ElastiCache para almacenar en memoria pares de preguntas-respuestas frecuentes por similitud semántica (>0.98), respondiendo en menos de 20 ms con costo $0 de inferencia.
+3. **Escalabilidad Vectorial Empresarial:** Para millones de documentos o bases documentales corporativas distribuidas, migrar el almacenamiento vectorial a **Amazon OpenSearch Serverless** o **pgvector en Amazon Aurora PostgreSQL**.
+4. **Ingesta Multi-Modal y Tabular:** Extender el pipeline de ingesta (`app/rag/ingest.py`) con parsing avanzado de tablas complejas, diagramas de arquitectura en PDFs mediante OCR (Amazon Textract) y hojas de cálculo (`.xlsx`).
+5. **Autenticación y Control de Acceso Basado en Roles (RBAC):** Integrar Amazon Cognito / Azure AD (OIDC/OAuth2 con JWT) para restringir qué documentos o procedimientos puede consultar cada perfil de usuario (ej. operadores L1 vs arquitectos Cloud L3).
+
+---
+
+## 8. Sección de Riesgos y Consideraciones para Producción
+
+En entornos productivos de operaciones de misión crítica, la solución contempla los siguientes riesgos y sus correspondientes estrategias de mitigación:
+
+| Riesgo Identificado | Impacto Operativo | Estrategia de Mitigación Implementada / Propuesta |
+| :--- | :--- | :--- |
+| **Alucinación Técnica** | Alto: Un procedimiento inventado puede causar caídas de producción en bases de datos. | **Filtro de Umbral Estricto + Abstención Formal:** Si no hay evidencia con alta similitud en los documentos autorizados, el sistema reporta estado `ABSTAINED` y se niega a responder (0% alucinaciones). |
+| **Inyección de Prompt Directa / Indirecta** | Alto: Manipulación de instrucciones del asistente o fuga de secretos. | **Guardrails de Seguridad:** Detección de patrones maliciosos en la entrada y encapsulamiento del contexto documental dentro de etiquetas XML pasivas `<context_documents>`. |
+| **Fuga de Secretos o Credenciales** | Crítico: Exposición de API keys, contraseñas de BD o credenciales IAM. | **Cero Secretos en Código:** Variables en `.env` ignoradas por git, y en AWS uso nativo de **IAM Roles / Managed Identities** sin contraseñas estáticas; integración con AWS Secrets Manager. |
+| **Ataques de Denegación de Servicio (DoS)** | Medio / Alto: Saturación de peticiones y aumento inesperado de costos en AWS. | **API Gateway Throttling & AWS WAF:** Rate limiting por IP/token y reglas de inspección web frente al endpoint público. |
+| **Deriva Documental (Información Desactualizada)** | Medio: El asistente responde con políticas o procedimientos derogados. | **Versionamiento en S3 y Metadatos de Vigencia:** Cada fragmento incluye metadatos de vigencia y versión (ej. SOP-DB-004 v2.3); pipeline CI/CD que re-indexa automáticamente ante cambios en el bucket de S3. |
+| **Fallas Silenciosas o Cajas Negras** | Medio: Dificultad para auditar decisiones tomadas por el asistente. | **Trazabilidad Inmutable:** Cada interacción genera un `interaction_id` con timestamp, latencia, herramientas ejecutadas y citas persistido en DynamoDB/SQLite para auditoría. |
+
