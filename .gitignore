@@ -55,10 +55,9 @@ infra/terraform/.terraform.lock.hcl
 .coverage
 htmlcov/
 
-# IDE & OS
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-*.swp
-*.tmp
+# Packaging & Build Artifacts
+*.zip
+lambda_dist/
+lambda_deps/
+*.tar.gz
+infra/terraform/tfplan
