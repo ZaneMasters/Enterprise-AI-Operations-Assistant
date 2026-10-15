@@ -23,10 +23,12 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     PROJECT_NAME: str = "Enterprise AI Operations Assistant"
 
-    # Almacenamiento local
+    # Almacenamiento local y cloud
     VECTOR_DB_PATH: str = "./data/vectorstore"
     SQLITE_DB_PATH: str = "./data/history.db"
     REQUESTS_DB_PATH: str = "./data/requests_db.json"
+    DYNAMODB_TABLE_NAME: Optional[str] = None
+
 
     # Proveedor LLM: "mock", "bedrock", "openai"
     LLM_PROVIDER: str = "mock"
