@@ -1,0 +1,16 @@
+.git/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+data/vectorstore/
+data/history.db
+infra/terraform/
+.pytest_cache/
+.coverage
+.specify/
+specs/
+.agents/

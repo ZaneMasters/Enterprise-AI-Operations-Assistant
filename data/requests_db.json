@@ -1,0 +1,49 @@
+{
+  "requests": [
+    {
+      "request_id": "REQ-1001",
+      "title": "Aprobación de ventana de actualización Aurora PostgreSQL",
+      "status": "APROBADO",
+      "category": "INFRAESTRUCTURA",
+      "requester": "carlos.mora@empresa.com",
+      "created_at": "2026-10-12T09:30:00Z",
+      "details": "Ventana programada para el jueves a las 02:00 UTC. Snapshot previo pre-upgrade-20261012-aurora validado."
+    },
+    {
+      "request_id": "REQ-1002",
+      "title": "Solicitud de credenciales de acceso temporal bastión SSH",
+      "status": "PENDIENTE",
+      "category": "ACCESO",
+      "requester": "maria.gomez@empresa.com",
+      "created_at": "2026-10-14T14:15:00Z",
+      "details": "Requiere acceso temporal de 4 horas para depuración de conectividad en cluster ECS."
+    },
+    {
+      "request_id": "REQ-1003",
+      "title": "Reemplazo de certificado TLS expirado en balanceador",
+      "status": "EN_PROGRESO",
+      "category": "SEGURIDAD",
+      "requester": "seguridad-ops@empresa.com",
+      "created_at": "2026-10-14T18:00:00Z",
+      "details": "Generación y enlace de nuevo certificado ACM en Application Load Balancer."
+    },
+    {
+      "request_id": "REQ-1004",
+      "title": "Ampliación de capacidad de almacenamiento en volumen EBS",
+      "status": "COMPLETADO",
+      "category": "INFRAESTRUCTURA",
+      "requester": "devops@empresa.com",
+      "created_at": "2026-10-10T11:00:00Z",
+      "details": "Volumen expandido de 100GB a 250GB sin interrupción de servicio."
+    },
+    {
+      "request_id": "REQ-1005",
+      "title": "Apertura de puerto 22 directo a Internet en Security Group",
+      "status": "RECHAZADO",
+      "category": "SEGURIDAD",
+      "requester": "practicante.ti@empresa.com",
+      "created_at": "2026-10-13T16:45:00Z",
+      "details": "Rechazado automáticamente por violar la política POL-SEC-012 de cero exposición SSH directa."
+    }
+  ]
+}
