@@ -93,9 +93,30 @@ async def ingest_document_endpoint(
                 detail="El archivo proporcionado está vacío."
             )
 
-        # Si es PDF, guardarlo temporalmente para que pypdf lo lea
+        # 1. Si S3 está configurado (ej. en AWS Lambda), respaldar el archivo original en el Bucket S3
+        s3_bucket = get_settings().S3_BUCKET_NAME or os.environ.get("S3_BUCKET_NAME")
+        if s3_bucket:
+            try:
+                import boto3
+                region = get_settings().BEDROCK_REGION or os.environ.get("AWS_REGION", "us-east-1")
+                s3_client = boto3.client("s3", region_name=region)
+                s3_key = f"documents/{filename}"
+                s3_client.put_object(
+                    Bucket=s3_bucket,
+                    Key=s3_key,
+                    Body=content_bytes,
+                    ContentType=file.content_type or "application/octet-stream",
+                    Metadata={"category": category or "general"}
+                )
+                logger.info(f"Documento '{filename}' respaldado exitosamente en S3: s3://{s3_bucket}/{s3_key}")
+            except Exception as e:
+                logger.warning(f"No se pudo respaldar documento en S3: {e}")
+
+        # 2. Si es PDF, guardarlo temporalmente para que pypdf lo lea
         if ext == ".pdf":
-            temp_path = f"./data/temp_{filename}"
+            # En AWS Lambda el directorio escribible es /tmp
+            temp_dir = "/tmp" if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") else "./data"
+            temp_path = os.path.join(temp_dir, f"temp_{filename}")
             with open(temp_path, "wb") as f:
                 f.write(content_bytes)
             try:
@@ -112,11 +133,15 @@ async def ingest_document_endpoint(
             category=category or "general"
         )
 
+        msg = f"Documento '{filename}' procesado e indexado exitosamente ({total_chunks} fragmentos)."
+        if s3_bucket:
+            msg += f" Respaldado en S3 (s3://{s3_bucket}/documents/{filename})."
+
         return DocumentIngestResponse(
             doc_id=doc_id,
             filename=filename,
             chunks_created=total_chunks,
-            message=f"Documento '{filename}' procesado e indexado exitosamente ({total_chunks} fragmentos)."
+            message=msg
         )
 
     except HTTPException:

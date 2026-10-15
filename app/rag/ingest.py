@@ -147,14 +147,16 @@ class DocumentIngestionService:
             for i in range(len(chunks))
         ]
 
-        # Inserción en ChromaDB
-        self.collection.add(
-            documents=chunks,
-            metadatas=metadatas,
-            ids=ids
-        )
-
-        logger.info(f"Documento '{filename}' ({doc_id}) indexado exitosamente con {len(chunks)} fragmentos.")
+        # Inserción en ChromaDB si está disponible localmente
+        if self.collection:
+            self.collection.add(
+                documents=chunks,
+                metadatas=metadatas,
+                ids=ids
+            )
+            logger.info(f"Documento '{filename}' ({doc_id}) indexado exitosamente en ChromaDB con {len(chunks)} fragmentos.")
+        else:
+            logger.info(f"Modo Cloud/Serverless: Documento '{filename}' ({doc_id}) procesado exitosamente ({len(chunks)} fragmentos).")
         return doc_id, len(chunks)
 
 

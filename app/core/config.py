@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     SQLITE_DB_PATH: str = "./data/history.db"
     REQUESTS_DB_PATH: str = "./data/requests_db.json"
     DYNAMODB_TABLE_NAME: Optional[str] = None
+    S3_BUCKET_NAME: Optional[str] = None
 
 
     # Proveedor LLM: "mock", "bedrock", "openai"
